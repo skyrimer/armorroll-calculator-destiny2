@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from prettytable import PrettyTable
+from rich.table import Table
 
 
 @dataclass
@@ -39,43 +39,40 @@ class ArmorSet():
         self.rating = self.get_armor_rating()
         self.is_good = True if self.wasted_stats <= 10 and self.actual_roll >= 310 else False
 
-    def __lt__(self, other):
-        return self.actual_roll > other.actual_roll
-
-    def get_total_mobility(self):
+    def get_total_mobility(self) -> int:
         return self.helmet.mobility + self.arms.mobility + \
             self.chest.mobility + self.legs.mobility
 
-    def get_total_resilience(self):
+    def get_total_resilience(self) -> str:
         return self.helmet.resilience + self.arms.resilience + \
             self.chest.resilience + self.legs.resilience
 
-    def get_total_recovery(self):
+    def get_total_recovery(self) -> str:
         return self.helmet.recovery + self.arms.recovery + \
             self.chest.recovery + self.legs.recovery
 
-    def get_total_discipline(self):
+    def get_total_discipline(self) -> str:
         return self.helmet.discipline + self.arms.discipline + \
             self.chest.discipline + self.legs.discipline
 
-    def get_total_intelect(self):
+    def get_total_intelect(self) -> str:
         return self.helmet.intelect + self.arms.intelect + \
             self.chest.intelect + self.legs.intelect
 
-    def get_total_strength(self):
+    def get_total_strength(self) -> str:
         return self.helmet.strength + self.arms.strength + \
             self.chest.strength + self.legs.strength
 
-    def get_total_stats(self):
+    def get_total_stats(self) -> str:
         return [self.mobility, self.resilience, self.recovery, self.discipline, self.intelect, self.strength]
 
-    def get_armor_rating(self):
+    def get_armor_rating(self) -> str:
         counter = 0
         for stat in self.total_stats:
             counter += 2 if stat % 10 == 0 else 1 if stat % 10 == 1 or stat % 10 == 2 else 0
         return counter
 
-    def get_wasted_stats(self):
+    def get_wasted_stats(self) -> str:
         wasted_stats = 0
         for stat in self.total_stats:
             wasted_stats += stat % 10
@@ -83,7 +80,7 @@ class ArmorSet():
 
 
 def get_all_rolls(helmets: list[ArmorPiece], arms: list[ArmorPiece],
-                  chests: list[ArmorPiece], legs: list[ArmorPiece]):
+                  chests: list[ArmorPiece], legs: list[ArmorPiece]) -> list[ArmorSet]:
     armor_sets = []
     for legs in legs:
         for helmet in helmets:
@@ -93,46 +90,42 @@ def get_all_rolls(helmets: list[ArmorPiece], arms: list[ArmorPiece],
     return armor_sets
 
 
-def get_good_rolls(all_rolls: list[ArmorSet]):
+def get_good_rolls(all_rolls: list[ArmorSet]) -> list[ArmorSet]:
     return sorted([roll for roll in all_rolls if roll.is_good],
                   key=lambda x: x.actual_roll)
 
 
-def get_armorset_table(roll: ArmorSet):
-    table = PrettyTable()
-    table.field_names = ["Armor rating", "Total roll", "Actuall roll",
-                         "Wasted stats", "Mobility", "Resilience",
-                         "Recovery", "Discipline",
-                         "Intelect", "Strength"]
-    table.add_row([
-        roll.rating, roll.total_roll, roll.actual_roll,
-        roll.wasted_stats, roll.mobility, roll.resilience,
-        roll.recovery, roll.discipline,
-        roll.intelect, roll.strength
-    ])
-    return table.get_string()
+def get_table(title: str, columns: list[str], rows: list) -> Table:
+    table = Table(title=title)
+    for column in columns:
+        table.add_column(column[0], style=column[1], justify="center")
+    for row in rows:
+        table.add_row(*map(str, row))
+    return table
 
 
-def get_armorpiece_table(roll: ArmorSet):
-    table = PrettyTable()
-    table.field_names = ["Id", "Type", "Mobility",
-                         "Resilience", "Recovery", "Discipline",
-                         "Intelect", "Strength", "Total roll"]
-    table.add_rows([
-        [roll.helmet.id, roll.helmet.type, roll.helmet.mobility,
-         roll.helmet.resilience, roll.helmet.recovery, roll.helmet.discipline,
-         roll.helmet.intelect, roll.helmet.strength, roll.helmet.total_roll],
+def get_armorset_table(roll: ArmorSet) -> Table:
+    columns = [["Armor rating", "green"], ["Total roll", "cyan"],
+               ["Actuall roll", "cyan"], ["Wasted stats", "cyan"],
+               ["Mobility", "magenta"], ["Resilience", "magenta"],
+               ["Recovery", "magenta"], ["Discipline", "magenta"],
+               ["Intelect", "magenta"], ["Strength", "magenta"]]
+    rows = [[roll.rating, roll.total_roll, roll.actual_roll,
+            roll.wasted_stats, roll.mobility, roll.resilience,
+            roll.recovery, roll.discipline,
+            roll.intelect, roll.strength]]
+    return get_table("General armor roll", columns, rows)
 
-        [roll.arms.id, roll.arms.type, roll.arms.mobility,
-         roll.arms.resilience, roll.arms.recovery, roll.arms.discipline,
-         roll.arms.intelect, roll.arms.strength, roll.arms.total_roll],
 
-        [roll.chest.id, roll.chest.type, roll.chest.mobility,
-         roll.chest.resilience, roll.chest.recovery, roll.chest.discipline,
-         roll.chest.intelect, roll.chest.strength, roll.chest.total_roll],
-
-        [roll.legs.id, roll.legs.type, roll.legs.mobility,
-         roll.legs.resilience, roll.legs.recovery, roll.legs.discipline,
-         roll.legs.intelect, roll.legs.strength, roll.legs.total_roll],
-    ])
-    return table.get_string()
+def get_armorpiece_table(roll: ArmorSet) -> Table:
+    columns = [["Id", "green"], ["Type", "cyan"],
+               ["Mobility", "magenta"], ["Resilience", "magenta"],
+               ["Recovery", "magenta"], ["Discipline", "magenta"],
+               ["Intelect", "magenta"], ["Strength", "magenta"],
+               ['Totall Roll', "green"]]
+    rows = []
+    for gear in [roll.helmet, roll.arms, roll.chest, roll.legs]:
+        rows.append([gear.id, gear.type, gear.mobility,
+                    gear.resilience, gear.recovery, gear.discipline,
+                    gear.intelect, gear.strength, gear.total_roll])
+    return get_table("Each gear roll", columns, rows)
