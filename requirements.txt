@@ -1,3 +1,7 @@
-colorama==0.4.4
-prettytable==2.2.0
+autopep8==1.5.7
+commonmark==0.9.1
+pycodestyle==2.7.0
+Pygments==2.10.0
+rich==10.9.0
+toml==0.10.2
 wcwidth==0.2.5

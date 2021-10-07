@@ -31,13 +31,12 @@ class ArmorSet():
         self.recovery = self.get_total_recovery() + 2
         self.discipline = self.get_total_discipline() + 2
         self.intelect = self.get_total_intelect() + 2
-        self.strength = self.get_total_strength() + 2
+        self.strength = self.get_total_strength() + 22
         self.total_stats = self.get_total_stats()
         self.total_roll = sum(self.total_stats)
         self.wasted_stats = self.get_wasted_stats()
         self.actual_roll = self.total_roll - self.wasted_stats
-        self.rating = self.get_armor_rating()
-        self.is_good = True if self.wasted_stats <= 10 and self.actual_roll >= 310 else False
+        self.is_good = self.actual_roll >= 340
 
     def get_total_mobility(self) -> int:
         return self.helmet.mobility + self.arms.mobility + \
@@ -66,12 +65,6 @@ class ArmorSet():
     def get_total_stats(self) -> str:
         return [self.mobility, self.resilience, self.recovery, self.discipline, self.intelect, self.strength]
 
-    def get_armor_rating(self) -> str:
-        counter = 0
-        for stat in self.total_stats:
-            counter += 2 if stat % 10 == 0 else 1 if stat % 10 == 1 or stat % 10 == 2 else 0
-        return counter
-
     def get_wasted_stats(self) -> str:
         wasted_stats = 0
         for stat in self.total_stats:
@@ -91,8 +84,8 @@ def get_all_rolls(helmets: list[ArmorPiece], arms: list[ArmorPiece],
 
 
 def get_good_rolls(all_rolls: list[ArmorSet]) -> list[ArmorSet]:
-    return sorted([roll for roll in all_rolls if roll.is_good],
-                  key=lambda x: x.actual_roll)
+    return sorted(sorted([roll for roll in all_rolls if roll.is_good],
+                         key=lambda x: x.actual_roll), key=lambda x: x.recovery)
 
 
 def get_table(title: str, columns: list[str], rows: list) -> Table:
@@ -105,12 +98,12 @@ def get_table(title: str, columns: list[str], rows: list) -> Table:
 
 
 def get_armorset_table(roll: ArmorSet) -> Table:
-    columns = [["Armor rating", "green"], ["Total roll", "cyan"],
+    columns = [["Total roll", "cyan"],
                ["Actuall roll", "cyan"], ["Wasted stats", "cyan"],
                ["Mobility", "magenta"], ["Resilience", "magenta"],
                ["Recovery", "magenta"], ["Discipline", "magenta"],
                ["Intelect", "magenta"], ["Strength", "magenta"]]
-    rows = [[roll.rating, roll.total_roll, roll.actual_roll,
+    rows = [[roll.total_roll, roll.actual_roll,
             roll.wasted_stats, roll.mobility, roll.resilience,
             roll.recovery, roll.discipline,
             roll.intelect, roll.strength]]
